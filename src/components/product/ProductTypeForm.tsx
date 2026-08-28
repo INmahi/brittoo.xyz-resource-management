@@ -27,15 +27,19 @@ const attributeSchema = z.object({
 })
 
 const formSchema = z.object({
-  name: z
-    .string()
-    .min(1, 'Required')
-    .regex(/^[a-z0-9_]+$/, 'Lowercase letters, numbers, underscore only'),
   label: z.string().min(1, 'Required'),
   attributes: z.array(attributeSchema),
 })
 
 type FormValues = z.infer<typeof formSchema>
+
+function slugify(label: string) {
+  return label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+}
 
 export function ProductTypeForm({ onCreated }: { onCreated?: () => void }) {
   const [open, setOpen] = useState(false)
@@ -49,13 +53,19 @@ export function ProductTypeForm({ onCreated }: { onCreated?: () => void }) {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: '', label: '', attributes: [] },
+    defaultValues: { label: '', attributes: [] },
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'attributes' })
 
   async function onSubmit(values: FormValues) {
     setError(null)
+    const name = slugify(values.label)
+    if (!name) {
+      setError('Product type needs at least one letter or number.')
+      return
+    }
+
     const attributeSchemaJson = values.attributes.map((a) => ({
       key: a.key,
       label: a.label,
@@ -66,13 +76,13 @@ export function ProductTypeForm({ onCreated }: { onCreated?: () => void }) {
     }))
 
     const { error: insertError } = await supabase.from('product_types').insert({
-      name: values.name,
+      name,
       label: values.label,
       attribute_schema: attributeSchemaJson,
     })
 
     if (insertError) {
-      setError(insertError.message)
+      setError(insertError.code === '23505' ? 'A product type with this name already exists.' : insertError.message)
       return
     }
 
@@ -101,12 +111,7 @@ export function ProductTypeForm({ onCreated }: { onCreated?: () => void }) {
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="type-name">Internal name (slug)</Label>
-            <Input id="type-name" placeholder="cycle" {...register('name')} />
-            {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="type-label">Display label</Label>
+            <Label htmlFor="type-label">Product type</Label>
             <Input id="type-label" placeholder="Cycle" {...register('label')} />
             {errors.label && <p className="text-xs text-destructive">{errors.label.message}</p>}
           </div>

@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'Brittoo Cycle Manager',
+        name: 'Brittoo Rental Manager',
         short_name: 'Brittoo',
-        description: 'Rental coordination dashboard for Brittoo Sust',
+        description: 'Rental coordination dashboard for Brittoo Sust — any product type, not just cycles',
         theme_color: '#059669',
         background_color: '#ffffff',
         display: 'standalone',
