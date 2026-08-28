@@ -1,19 +1,32 @@
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Navigate, Route, Routes } from 'react-router-dom'
+
+import { AppShell } from '@/components/layout/AppShell'
+import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
+import AccountPage from '@/routes/AccountPage'
+import ContactsPage from '@/routes/ContactsPage'
+import DashboardPage from '@/routes/DashboardPage'
+import LoginPage from '@/routes/LoginPage'
 
 function App() {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-4 bg-background p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Brittoo Cycle Manager</CardTitle>
-          <CardDescription>Scaffolding is up. Dashboard, auth, and product screens land in Phase 1.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button>It works</Button>
-        </CardContent>
-      </Card>
-    </div>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute>
+            <AppShell>
+              <Routes>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/contacts" element={<ContactsPage />} />
+                <Route path="/account" element={<AccountPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </AppShell>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   )
 }
 

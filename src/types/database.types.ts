@@ -328,12 +328,12 @@ export type Database = {
           p_client_occurred_at: string
           p_event_id: string
           p_expected_version: number
-          p_key_holder: string
+          p_key_holder: string | null
           p_new_status: string
-          p_owner_id: number
+          p_owner_id: number | null
           p_product_id: string
-          p_renter_id: number
-          p_station: string
+          p_renter_id: number | null
+          p_station: string | null
         }
         Returns: {
           attributes: Json
