@@ -13,11 +13,17 @@ Short log of what's used and why. Add an entry whenever a new library, service, 
 - **lucide-react** — icon set used by the UI components.
 - **vite-plugin-pwa** (Workbox) — generates the service worker + manifest for installability and offline app-shell caching.
 
-## Data & offline sync (Phase 2/3, in progress)
+## Data & auth (Phase 1, done — online only)
 
-- **@supabase/supabase-js** — Postgres access, Auth, and Realtime client.
-- **Dexie.js + dexie-react-hooks** — local IndexedDB layer; the UI reads/writes Dexie only, with a sync engine reconciling it against Supabase. This is what makes the app work offline.
-- **react-hook-form + zod** — forms, including attribute forms generated dynamically from a product type's schema.
+- **@supabase/supabase-js** — Postgres access, Auth, and Realtime client (`src/lib/supabaseClient.ts`, typed against `src/types/database.types.ts`).
+- **`src/lib/auth.tsx`** — thin `AuthProvider`/`useAuth` wrapping Supabase Auth session + the matching `coordinators` row; `ProtectedRoute` redirects to `/login` when signed out.
+- **Data hooks** (`src/hooks/`) — `useProducts`, `useProductTypes`, `useOwners`/`useRenters` each fetch once and re-fetch on a **Realtime** `postgres_changes` subscription, so any coordinator's change appears live for everyone without polling. Each hook instance uses a unique channel name (`useId()`) — reusing a static channel name across multiple mounted instances of the same hook crashes Supabase's realtime-js client ("cannot add callbacks after subscribe()"), hit and fixed during Phase 1 testing.
+- **`src/lib/productActions.ts`** — calls the `change_product_status` RPC and translates a `version_conflict` error into a `{ conflict: true }` result the UI can show inline; this is the seam Phase 3's offline sync engine will reuse.
+- **react-hook-form + zod** — used in `ProductTypeForm` for the dynamic attribute-schema builder; simpler forms (login, product instance, contacts) use plain `useState` since react-hook-form's benefit (schema validation, field arrays) only pays off for that one dynamic form.
+
+## Offline sync (Phase 2/3, not started)
+
+- **Dexie.js + dexie-react-hooks** — planned local IndexedDB layer; the UI will read/write Dexie only, with a sync engine reconciling it against Supabase. This is what will make the app work offline. Already installed, not yet wired in.
 
 ## Backend (Supabase project: `brittoo-cycle-manager`, region `ap-southeast-1`)
 
