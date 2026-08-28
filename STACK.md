@@ -13,6 +13,16 @@ Short log of what's used and why. Add an entry whenever a new library, service, 
 - **lucide-react** — icon set used by the UI components.
 - **vite-plugin-pwa** (Workbox) — generates the service worker + manifest for installability and offline app-shell caching.
 
+## PWA
+
+How it works: `vite-plugin-pwa` runs Workbox at build time to generate a service worker (`dist/sw.js`) plus a `manifest.webmanifest`. The service worker precaches the app shell (JS/CSS/HTML/icons) so the app loads even with no network, and the manifest is what lets a browser treat the site as an installable app (name, icons, theme color, `display: standalone` for a chrome-less window). None of this touches app *data* yet — that's Phase 2/3's Dexie sync engine; this is purely "does the app shell load offline and install like an app."
+
+Extra steps needed beyond a normal Vite app (all in `vite.config.ts`'s `VitePWA({...})` block):
+- Register the plugin and set `registerType: 'autoUpdate'` so a new deploy's service worker takes over automatically instead of silently serving a stale cached version.
+- Declare a `manifest` (name, short_name, theme/background color, icons) — without real icon files here, "Add to Home Screen" either fails or looks broken.
+- List any non-hashed static files (e.g. `fav.png`, `brittoo-logo.png`) in `includeAssets` and in the `workbox.globPatterns` file-type list, or Workbox won't know to precache them.
+- Served over HTTPS (or localhost) — service workers refuse to register on plain HTTP, which Netlify's default domain satisfies automatically.
+
 ## Data & auth (Phase 1, done — online only)
 
 - **@supabase/supabase-js** — Postgres access, Auth, and Realtime client (`src/lib/supabaseClient.ts`, typed against `src/types/database.types.ts`).
@@ -34,7 +44,7 @@ Short log of what's used and why. Add an entry whenever a new library, service, 
 
 ## Hosting / deploy
 
-- Not yet wired up. Plan: Netlify (pending the user authorizing the Netlify connector) deploying from the GitHub repo `INmahi/brittoo.xyz-resource-management`.
+- **Netlify**, auto-deploying from `main` on `INmahi/brittoo.xyz-resource-management` (build: `npm run build`, publish: `dist`). Supabase URL/publishable key are set as Netlify env vars, not committed to the repo.
 
 ## Notable constraints
 
