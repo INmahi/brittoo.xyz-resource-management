@@ -29,7 +29,8 @@ export default function LoginPage() {
     <div className="flex min-h-svh flex-col items-center justify-center gap-4 bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Brittoo Rental Manager</CardTitle>
+          <img src="/brittoo-logo.png" alt="Brittoo" className="mb-2 h-9 w-auto" />
+          <CardTitle>Rent Manager</CardTitle>
           <CardDescription>Sign in with the coordinator account your admin created for you.</CardDescription>
         </CardHeader>
         <CardContent>

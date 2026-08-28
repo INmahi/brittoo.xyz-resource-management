@@ -11,22 +11,22 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['fav.png', 'brittoo-logo.png'],
       manifest: {
-        name: 'Brittoo Rental Manager',
+        name: 'Brittoo Rent Manager',
         short_name: 'Brittoo',
         description: 'Rental coordination dashboard for Brittoo Sust — any product type, not just cycles',
         theme_color: '#059669',
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
-        // TODO(Phase 4): replace with real 192/512 PNG app icons + maskable variant.
         icons: [
-          { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: 'fav.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'fav.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
       },
     }),
   ],

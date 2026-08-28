@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ContactQuickAdd } from '@/components/contacts/ContactQuickAdd'
@@ -45,9 +46,9 @@ export function ContactList<K extends 'owner' | 'renter'>({
           {contacts.map((c) => (
             <Card key={c.id}>
               <CardContent className="flex items-center justify-between p-3">
-                <div>
+                <div className="flex flex-col gap-1">
                   <p className="text-sm font-medium">{c.name}</p>
-                  {c.notes && <p className="text-xs text-muted-foreground">{c.notes}</p>}
+                  {c.notes && <Badge variant="outline">{c.notes}</Badge>}
                 </div>
                 <a href={`tel:${c.phone}`} className="text-sm text-primary underline-offset-4 hover:underline">
                   {c.phone}

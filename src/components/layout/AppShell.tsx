@@ -14,7 +14,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-svh flex-col bg-background sm:flex-row">
       <aside className="hidden w-56 shrink-0 border-r border-border p-4 sm:block">
-        <div className="mb-6 px-2 text-lg font-semibold text-primary">Brittoo</div>
+        <img src="/brittoo-logo.png" alt="Brittoo" className="mb-6 h-8 w-auto px-2" />
         <nav className="flex flex-col gap-1">
           {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
@@ -34,6 +34,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
       </aside>
+
+      <header className="flex items-center border-b border-border p-3 sm:hidden">
+        <img src="/brittoo-logo.png" alt="Brittoo" className="h-6 w-auto" />
+      </header>
 
       <main className="flex-1 pb-16 sm:pb-0">{children}</main>
 

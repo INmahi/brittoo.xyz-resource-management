@@ -18,6 +18,7 @@ export function ContactQuickAdd<K extends Kind>({
 }) {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [productTag, setProductTag] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -25,7 +26,8 @@ export function ContactQuickAdd<K extends Kind>({
     e.preventDefault()
     setError(null)
     setSubmitting(true)
-    const { data, error: createError } = kind === 'owner' ? await createOwner(name, phone) : await createRenter(name, phone)
+    const { data, error: createError } =
+      kind === 'owner' ? await createOwner(name, phone, productTag) : await createRenter(name, phone, productTag)
     setSubmitting(false)
     if (createError || !data) {
       setError(createError?.message ?? 'Something went wrong')
@@ -49,6 +51,17 @@ export function ContactQuickAdd<K extends Kind>({
           </Label>
           <Input id={`${kind}-phone`} placeholder="Phone" required value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
+      </div>
+      <div>
+        <Label htmlFor={`${kind}-product-tag`} className="sr-only">
+          Product name / tag
+        </Label>
+        <Input
+          id={`${kind}-product-tag`}
+          placeholder="Product name / tag (optional)"
+          value={productTag}
+          onChange={(e) => setProductTag(e.target.value)}
+        />
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
       <div className="flex gap-2">
