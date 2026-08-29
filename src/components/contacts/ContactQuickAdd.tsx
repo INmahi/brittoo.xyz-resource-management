@@ -33,6 +33,7 @@ export function ContactQuickAdd<K extends Kind>({
   // another <form> (e.g. Add Product's inline "New owner"). A nested <form> lets
   // its submit event bubble into the outer form, prematurely submitting it too.
   async function handleSubmit() {
+    if (!name || !phone) return
     setError(null)
     setSubmitting(true)
     const { data, error: createError } =
@@ -49,6 +50,16 @@ export function ContactQuickAdd<K extends Kind>({
     })
   }
 
+  // Since these inputs have no <form> of their own, pressing Enter would
+  // otherwise implicitly submit whichever ancestor <form> they happen to be
+  // embedded in (e.g. Add Product's) — stop that and submit this widget instead.
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      void handleSubmit()
+    }
+  }
+
   return (
     <div className="flex flex-col gap-2 rounded-md border border-border p-3">
       <div className="flex gap-2">
@@ -56,13 +67,25 @@ export function ContactQuickAdd<K extends Kind>({
           <Label htmlFor={`${kind}-name`} className="sr-only">
             Name
           </Label>
-          <Input id={`${kind}-name`} placeholder="Name" required value={name} onChange={(e) => setName(e.target.value)} />
+          <Input
+            id={`${kind}-name`}
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
         </div>
         <div className="flex-1">
           <Label htmlFor={`${kind}-phone`} className="sr-only">
             Phone
           </Label>
-          <Input id={`${kind}-phone`} placeholder="Phone" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <Input
+            id={`${kind}-phone`}
+            placeholder="Phone"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
         </div>
       </div>
       {showProductTag && (
@@ -75,6 +98,7 @@ export function ContactQuickAdd<K extends Kind>({
             placeholder="Product name / tag (optional)"
             value={productTag}
             onChange={(e) => setProductTag(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
         </div>
       )}

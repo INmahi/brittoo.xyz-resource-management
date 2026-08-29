@@ -134,6 +134,7 @@ export type Database = {
           id: string
           name: string
           product_type_id: string
+          remarks: string | null
           status: string
           status_version: number
           updated_at: string
@@ -151,6 +152,7 @@ export type Database = {
           id?: string
           name: string
           product_type_id: string
+          remarks?: string | null
           status?: string
           status_version?: number
           updated_at?: string
@@ -168,6 +170,7 @@ export type Database = {
           id?: string
           name?: string
           product_type_id?: string
+          remarks?: string | null
           status?: string
           status_version?: number
           updated_at?: string

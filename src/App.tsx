@@ -11,7 +11,7 @@ import LoginPage from '@/routes/LoginPage'
 function App() {
   return (
     <>
-      <Toaster position="top-center" richColors closeButton />
+      <Toaster position="bottom-right" richColors closeButton />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route

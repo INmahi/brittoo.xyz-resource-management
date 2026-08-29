@@ -13,6 +13,7 @@ export function FilterBar({
   onTypeChange,
   status,
   onStatusChange,
+  statusCounts,
   attributeOptions,
   attributeFilters,
   onAttributeFilterChange,
@@ -24,6 +25,7 @@ export function FilterBar({
   onTypeChange: (id: string) => void
   status: StatusFilter
   onStatusChange: (status: StatusFilter) => void
+  statusCounts: { all: number; available: number; at_rent: number }
   attributeOptions: { key: string; label: string; values: string[] }[]
   attributeFilters: Record<string, string>
   onAttributeFilterChange: (key: string, value: string | null) => void
@@ -34,9 +36,9 @@ export function FilterBar({
     <div className="flex flex-col gap-3">
       <Tabs value={status} onValueChange={(v) => onStatusChange(v as StatusFilter)}>
         <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="available">Available</TabsTrigger>
-          <TabsTrigger value="at_rent">At-rent</TabsTrigger>
+          <TabsTrigger value="all">All ({statusCounts.all})</TabsTrigger>
+          <TabsTrigger value="available">Available ({statusCounts.available})</TabsTrigger>
+          <TabsTrigger value="at_rent">At-rent ({statusCounts.at_rent})</TabsTrigger>
         </TabsList>
       </Tabs>
 

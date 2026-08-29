@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient'
+import type { Product } from '@/hooks/useProducts'
 
 export async function changeProductStatus(params: {
   productId: string
@@ -29,4 +30,17 @@ export async function changeProductStatus(params: {
   }
 
   return { data, conflict: false, error: null }
+}
+
+/** Direct status changes that don't need renter/owner capture (unlike at-rent/returned). */
+export async function setProductAvailability(product: Product, newStatus: 'available' | 'maintenance') {
+  return changeProductStatus({
+    productId: product.id,
+    expectedVersion: product.status_version,
+    newStatus,
+    renterId: newStatus === 'available' ? null : product.current_renter_id,
+    ownerId: product.current_owner_id,
+    station: product.current_station,
+    keyHolder: product.current_key_holder,
+  })
 }

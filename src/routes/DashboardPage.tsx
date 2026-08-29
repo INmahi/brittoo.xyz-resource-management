@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 
 import { FilterBar, type StatusFilter } from '@/components/dashboard/FilterBar'
-import { ProductCard } from '@/components/dashboard/ProductCard'
+import { ProductTable } from '@/components/dashboard/ProductTable'
 import { MarkAtRentSheet } from '@/components/product/MarkAtRentSheet'
 import { MarkReturnedSheet } from '@/components/product/MarkReturnedSheet'
 import { ProductDetailPanel } from '@/components/product/ProductDetailPanel'
@@ -47,17 +47,32 @@ export default function DashboardPage() {
       .filter((opt) => opt.values.length > 0)
   }, [typeId, products, attributeDefs])
 
-  const filteredProducts = useMemo(() => {
+  // Everything except the status filter itself, so tab counts reflect the
+  // current type/search/attribute filters without also collapsing to one status.
+  const productsBeforeStatusFilter = useMemo(() => {
     return products.filter((p) => {
       if (typeId !== 'all' && p.product_type_id !== typeId) return false
-      if (status !== 'all' && p.status !== status) return false
       if (search && !`${p.name} ${p.code ?? ''}`.toLowerCase().includes(search.toLowerCase())) return false
       for (const [key, value] of Object.entries(attributeFilters)) {
         if ((p.attributes as Record<string, string> | null)?.[key] !== value) return false
       }
       return true
     })
-  }, [products, typeId, status, search, attributeFilters])
+  }, [products, typeId, search, attributeFilters])
+
+  const statusCounts = useMemo(
+    () => ({
+      all: productsBeforeStatusFilter.length,
+      available: productsBeforeStatusFilter.filter((p) => p.status === 'available').length,
+      at_rent: productsBeforeStatusFilter.filter((p) => p.status === 'at_rent').length,
+    }),
+    [productsBeforeStatusFilter],
+  )
+
+  const filteredProducts = useMemo(
+    () => productsBeforeStatusFilter.filter((p) => status === 'all' || p.status === status),
+    [productsBeforeStatusFilter, status],
+  )
 
   return (
     <div className="mx-auto max-w-3xl p-4">
@@ -78,6 +93,7 @@ export default function DashboardPage() {
         }}
         status={status}
         onStatusChange={setStatus}
+        statusCounts={statusCounts}
         attributeOptions={attributeOptions}
         attributeFilters={attributeFilters}
         onAttributeFilterChange={(key, value) =>
@@ -92,21 +108,19 @@ export default function DashboardPage() {
         onSearchChange={setSearch}
       />
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mt-4">
         {filteredProducts.length === 0 ? (
-          <p className="col-span-full py-8 text-center text-sm text-muted-foreground">
+          <p className="py-8 text-center text-sm text-muted-foreground">
             {products.length === 0 ? 'No products yet — add a type, then a product.' : 'No products match these filters.'}
           </p>
         ) : (
-          filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onOpenDetail={setDetailProduct}
-              onMarkAtRent={setAtRentProduct}
-              onMarkReturned={setReturnedProduct}
-            />
-          ))
+          <ProductTable
+            products={filteredProducts}
+            onOpenDetail={setDetailProduct}
+            onMarkAtRent={setAtRentProduct}
+            onMarkReturned={setReturnedProduct}
+            onDeleted={refreshProducts}
+          />
         )}
       </div>
 

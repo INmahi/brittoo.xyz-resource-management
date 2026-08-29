@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 
 import { supabase } from '@/lib/supabaseClient'
 import type { Tables } from '@/types/database.types'
@@ -9,9 +9,12 @@ export type Renter = Tables<'renters'>
 function useContactTable<T>(table: 'owners' | 'renters') {
   const [rows, setRows] = useState<T[]>([])
   const [loading, setLoading] = useState(true)
+  const requestIdRef = useRef(0)
 
   const refresh = useCallback(async () => {
+    const requestId = ++requestIdRef.current
     const { data } = await supabase.from(table).select('*').is('deleted_at', null).order('name')
+    if (requestId !== requestIdRef.current) return
     setRows((data as T[]) ?? [])
     setLoading(false)
   }, [])
