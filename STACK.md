@@ -28,6 +28,7 @@ Extra steps needed beyond a normal Vite app (all in `vite.config.ts`'s `VitePWA(
 
 - Products render as a spreadsheet-style table (`ProductTable.tsx`) rather than cards: Name / Available (tick·cross·pause icons) / editable Remarks / delete. The pause icon reuses the existing `maintenance` status value to mean "temporarily unavailable" — no schema change needed for that.
 - Data hooks (`useProducts`, `useProductTypes`, `useContacts`) guard against an out-of-order-refresh race: Realtime can fire `refresh()` faster than each request resolves, and without a request-id check, an older response landing after a newer one would flash stale data back onto the screen.
+- **Team notes** (`notes` table, `NotesBubble.tsx`) — a floating chat-bubble launcher (bottom-left, visible on every page via `AppShell`) opening a shared note board. Anyone can post; delete is restricted to the note's own author or a coordinator with `role = 'admin'`, enforced in the `notes_update` RLS policy itself (soft-delete via `deleted_at`), not just hidden client-side.
 
 ## Data & auth (Phase 1, done — online only)
 
