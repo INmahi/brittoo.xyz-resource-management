@@ -8,7 +8,6 @@ import { ProductDetailPanel } from '@/components/product/ProductDetailPanel'
 import { ProductForm } from '@/components/product/ProductForm'
 import { ProductTypeForm } from '@/components/product/ProductTypeForm'
 import { useOwners, useRenters } from '@/hooks/useContacts'
-import type { Product } from '@/hooks/useProducts'
 import { useProducts } from '@/hooks/useProducts'
 import { useProductTypes } from '@/hooks/useProductTypes'
 
@@ -25,9 +24,16 @@ export default function DashboardPage() {
   const [search, setSearch] = useState('')
   const [attributeFilters, setAttributeFilters] = useState<Record<string, string>>({})
 
-  const [detailProduct, setDetailProduct] = useState<Product | null>(null)
-  const [atRentProduct, setAtRentProduct] = useState<Product | null>(null)
-  const [returnedProduct, setReturnedProduct] = useState<Product | null>(null)
+  // IDs, not the product objects themselves — so if a product changes (e.g. an
+  // edit saved) while its panel/sheet is open, it re-derives from the live
+  // `products` array below instead of rendering a stale snapshot.
+  const [detailProductId, setDetailProductId] = useState<string | null>(null)
+  const [atRentProductId, setAtRentProductId] = useState<string | null>(null)
+  const [returnedProductId, setReturnedProductId] = useState<string | null>(null)
+
+  const detailProduct = products.find((p) => p.id === detailProductId) ?? null
+  const atRentProduct = products.find((p) => p.id === atRentProductId) ?? null
+  const returnedProduct = products.find((p) => p.id === returnedProductId) ?? null
 
   const selectedType = productTypes.find((t) => t.id === typeId)
   const attributeDefs = (selectedType?.attribute_schema as AttributeDef[] | null) ?? []
@@ -116,9 +122,9 @@ export default function DashboardPage() {
         ) : (
           <ProductTable
             products={filteredProducts}
-            onOpenDetail={setDetailProduct}
-            onMarkAtRent={setAtRentProduct}
-            onMarkReturned={setReturnedProduct}
+            onOpenDetail={(p) => setDetailProductId(p.id)}
+            onMarkAtRent={(p) => setAtRentProductId(p.id)}
+            onMarkReturned={(p) => setReturnedProductId(p.id)}
             onDeleted={refreshProducts}
           />
         )}
@@ -128,20 +134,20 @@ export default function DashboardPage() {
         product={detailProduct}
         owners={owners}
         renters={renters}
-        open={detailProduct !== null}
-        onOpenChange={(open) => !open && setDetailProduct(null)}
+        open={detailProductId !== null}
+        onOpenChange={(open) => !open && setDetailProductId(null)}
         onChanged={refreshProducts}
       />
       <MarkAtRentSheet
         product={atRentProduct}
-        open={atRentProduct !== null}
-        onOpenChange={(open) => !open && setAtRentProduct(null)}
+        open={atRentProductId !== null}
+        onOpenChange={(open) => !open && setAtRentProductId(null)}
         onDone={refreshProducts}
       />
       <MarkReturnedSheet
         product={returnedProduct}
-        open={returnedProduct !== null}
-        onOpenChange={(open) => !open && setReturnedProduct(null)}
+        open={returnedProductId !== null}
+        onOpenChange={(open) => !open && setReturnedProductId(null)}
         onDone={refreshProducts}
       />
     </div>
