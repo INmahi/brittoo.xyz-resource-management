@@ -12,6 +12,7 @@ Short log of what's used and why. Add an entry whenever a new library, service, 
 - **class-variance-authority, clsx, tailwind-merge** — variant styling and safe class-name merging for the UI components.
 - **lucide-react** — icon set used by the UI components.
 - **vite-plugin-pwa** (Workbox) — generates the service worker + manifest for installability and offline app-shell caching.
+- **sonner** — toast notifications, used for the add/delete-with-undo pattern (`src/lib/toastActions.ts`'s `notifyWithUndo`): every create/delete of a product, product type, owner, or renter is a soft delete (existing `deleted_at` column) with a few seconds to reverse via the toast's Undo action, rather than a confirm-before-you-act dialog.
 
 ## PWA
 
