@@ -2,6 +2,7 @@ import { LayoutGrid, User as UserIcon, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 
+import { NotesBubble } from '@/components/notes/NotesBubble'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -59,6 +60,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </NavLink>
         ))}
       </nav>
+
+      <NotesBubble />
     </div>
   )
 }
