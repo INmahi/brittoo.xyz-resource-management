@@ -64,7 +64,7 @@ export default function DashboardPage() {
       <div className="mb-4 flex items-center justify-between gap-2">
         <h1 className="text-xl font-semibold">Dashboard</h1>
         <div className="flex gap-2">
-          <ProductTypeForm onCreated={refreshTypes} />
+          <ProductTypeForm productTypes={productTypes} onCreated={refreshTypes} onDeleted={refreshTypes} />
           <ProductForm productTypes={productTypes} onCreated={refreshProducts} />
         </div>
       </div>
@@ -116,6 +116,7 @@ export default function DashboardPage() {
         renters={renters}
         open={detailProduct !== null}
         onOpenChange={(open) => !open && setDetailProduct(null)}
+        onChanged={refreshProducts}
       />
       <MarkAtRentSheet
         product={atRentProduct}

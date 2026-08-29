@@ -16,8 +16,9 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import type { ProductType } from '@/hooks/useProductTypes'
 import { supabase } from '@/lib/supabaseClient'
+import { notifyWithUndo } from '@/lib/toastActions'
 
 const attributeSchema = z.object({
   key: z.string().min(1, 'Required'),
@@ -41,7 +42,15 @@ function slugify(label: string) {
     .replace(/^_+|_+$/g, '')
 }
 
-export function ProductTypeForm({ onCreated }: { onCreated?: () => void }) {
+export function ProductTypeForm({
+  productTypes,
+  onCreated,
+  onDeleted,
+}: {
+  productTypes: ProductType[]
+  onCreated?: () => void
+  onDeleted?: () => void
+}) {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -75,20 +84,34 @@ export function ProductTypeForm({ onCreated }: { onCreated?: () => void }) {
         : {}),
     }))
 
-    const { error: insertError } = await supabase.from('product_types').insert({
-      name,
-      label: values.label,
-      attribute_schema: attributeSchemaJson,
-    })
+    const { data: inserted, error: insertError } = await supabase
+      .from('product_types')
+      .insert({ name, label: values.label, attribute_schema: attributeSchemaJson })
+      .select('id')
+      .single()
 
-    if (insertError) {
-      setError(insertError.code === '23505' ? 'A product type with this name already exists.' : insertError.message)
+    if (insertError || !inserted) {
+      setError(
+        insertError?.code === '23505' ? 'A product type with this name already exists.' : (insertError?.message ?? 'Something went wrong'),
+      )
       return
     }
 
     reset()
-    setOpen(false)
     onCreated?.()
+    notifyWithUndo(`${values.label} added`, async () => {
+      await supabase.from('product_types').delete().eq('id', inserted.id)
+      onDeleted?.()
+    })
+  }
+
+  async function handleDeleteType(type: ProductType) {
+    await supabase.from('product_types').update({ deleted_at: new Date().toISOString() }).eq('id', type.id)
+    onDeleted?.()
+    notifyWithUndo(`${type.label} removed`, async () => {
+      await supabase.from('product_types').update({ deleted_at: null }).eq('id', type.id)
+      onDeleted?.()
+    })
   }
 
   return (
@@ -106,12 +129,29 @@ export function ProductTypeForm({ onCreated }: { onCreated?: () => void }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add product type</DialogTitle>
+          <DialogTitle>Product types</DialogTitle>
           <DialogDescription>e.g. cycle, powerbank. Attributes are optional and drive filters/forms.</DialogDescription>
         </DialogHeader>
+
+        {productTypes.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <Label>Existing types</Label>
+            <div className="flex flex-col gap-1.5">
+              {productTypes.map((type) => (
+                <div key={type.id} className="flex items-center justify-between rounded-md border border-border px-3 py-1.5">
+                  <span className="text-sm">{type.label}</span>
+                  <Button type="button" variant="ghost" size="icon" onClick={() => handleDeleteType(type)}>
+                    <Trash2 className="size-4 text-muted-foreground" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="type-label">Product type</Label>
+            <Label htmlFor="type-label">Add a new type</Label>
             <Input id="type-label" placeholder="Cycle" {...register('label')} />
             {errors.label && <p className="text-xs text-destructive">{errors.label.message}</p>}
           </div>
@@ -158,31 +198,5 @@ export function ProductTypeForm({ onCreated }: { onCreated?: () => void }) {
         </form>
       </DialogContent>
     </Dialog>
-  )
-}
-
-// Re-exported for the product form's type select.
-export function ProductTypeSelectField({
-  value,
-  onChange,
-  productTypes,
-}: {
-  value: string
-  onChange: (v: string) => void
-  productTypes: { id: string; label: string }[]
-}) {
-  return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger>
-        <SelectValue placeholder="Select a type" />
-      </SelectTrigger>
-      <SelectContent>
-        {productTypes.map((pt) => (
-          <SelectItem key={pt.id} value={pt.id}>
-            {pt.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
   )
 }

@@ -1,10 +1,13 @@
+import { Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import type { Owner, Renter } from '@/hooks/useContacts'
 import type { Product } from '@/hooks/useProducts'
 import { supabase } from '@/lib/supabaseClient'
+import { notifyWithUndo } from '@/lib/toastActions'
 import type { Tables } from '@/types/database.types'
 
 type RentalEvent = Tables<'rental_events'>
@@ -15,12 +18,14 @@ export function ProductDetailPanel({
   renters,
   open,
   onOpenChange,
+  onChanged,
 }: {
   product: Product | null
   owners: Owner[]
   renters: Renter[]
   open: boolean
   onOpenChange: (open: boolean) => void
+  onChanged: () => void
 }) {
   const [events, setEvents] = useState<RentalEvent[]>([])
 
@@ -40,6 +45,18 @@ export function ProductDetailPanel({
   const owner = owners.find((o) => o.id === product.current_owner_id)
   const renter = renters.find((r) => r.id === product.current_renter_id)
   const attributes = (product.attributes ?? {}) as Record<string, string>
+
+  async function handleDelete() {
+    const productId = product!.id
+    const productName = product!.name
+    await supabase.from('products').update({ deleted_at: new Date().toISOString() }).eq('id', productId)
+    onOpenChange(false)
+    onChanged()
+    notifyWithUndo(`${productName} removed`, async () => {
+      await supabase.from('products').update({ deleted_at: null }).eq('id', productId)
+      onChanged()
+    })
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -102,6 +119,10 @@ export function ProductDetailPanel({
               ))}
             </div>
           </div>
+
+          <Button variant="destructive" size="sm" className="self-start" onClick={handleDelete}>
+            <Trash2 /> Delete product
+          </Button>
         </div>
       </SheetContent>
     </Sheet>

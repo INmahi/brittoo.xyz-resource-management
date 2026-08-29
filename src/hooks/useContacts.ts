@@ -47,3 +47,13 @@ export async function createOwner(name: string, phone: string, notes?: string) {
 export async function createRenter(name: string, phone: string, notes?: string) {
   return supabase.from('renters').insert({ name, phone, notes }).select('*').single()
 }
+
+export async function softDeleteContact(kind: 'owner' | 'renter', id: number) {
+  const table = kind === 'owner' ? 'owners' : 'renters'
+  return supabase.from(table).update({ deleted_at: new Date().toISOString() }).eq('id', id)
+}
+
+export async function restoreContact(kind: 'owner' | 'renter', id: number) {
+  const table = kind === 'owner' ? 'owners' : 'renters'
+  return supabase.from(table).update({ deleted_at: null }).eq('id', id)
+}

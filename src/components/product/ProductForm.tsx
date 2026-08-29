@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useOwners } from '@/hooks/useContacts'
 import type { ProductType } from '@/hooks/useProductTypes'
 import { supabase } from '@/lib/supabaseClient'
+import { notifyWithUndo } from '@/lib/toastActions'
 
 type AttributeDef = { key: string; label: string; type: 'text' | 'select'; options?: string[] }
 
@@ -57,24 +58,32 @@ export function ProductForm({ productTypes, onCreated }: { productTypes: Product
     setError(null)
     setSubmitting(true)
 
-    const { error: insertError } = await supabase.from('products').insert({
-      product_type_id: typeId,
-      name,
-      code: code || null,
-      current_station: station || null,
-      current_owner_id: ownerId ? Number(ownerId) : null,
-      attributes: attributeValues,
-    })
+    const { data: inserted, error: insertError } = await supabase
+      .from('products')
+      .insert({
+        product_type_id: typeId,
+        name,
+        code: code || null,
+        current_station: station || null,
+        current_owner_id: ownerId ? Number(ownerId) : null,
+        attributes: attributeValues,
+      })
+      .select('id')
+      .single()
 
     setSubmitting(false)
-    if (insertError) {
-      setError(insertError.message)
+    if (insertError || !inserted) {
+      setError(insertError?.message ?? 'Something went wrong')
       return
     }
 
     reset()
     setOpen(false)
     onCreated()
+    notifyWithUndo(`${name} added`, async () => {
+      await supabase.from('products').delete().eq('id', inserted.id)
+      onCreated()
+    })
   }
 
   return (
