@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { Owner, Renter } from '@/hooks/useContacts'
 import type { Product } from '@/hooks/useProducts'
 import { supabase } from '@/lib/supabaseClient'
@@ -36,7 +37,10 @@ export function ProductDetailPanel({
   const [editing, setEditing] = useState(false)
   const [station, setStation] = useState('')
   const [keyHolder, setKeyHolder] = useState('')
+  const [ownerMode, setOwnerMode] = useState<'saved' | 'temporary'>('saved')
   const [ownerId, setOwnerId] = useState(NONE)
+  const [tempOwnerName, setTempOwnerName] = useState('')
+  const [tempOwnerPhone, setTempOwnerPhone] = useState('')
   const [renterId, setRenterId] = useState(NONE)
   const [saving, setSaving] = useState(false)
 
@@ -64,7 +68,10 @@ export function ProductDetailPanel({
   function startEditing() {
     setStation(product!.current_station ?? '')
     setKeyHolder(product!.current_key_holder ?? '')
+    setOwnerMode(product!.temp_owner_name ? 'temporary' : 'saved')
     setOwnerId(product!.current_owner_id ? String(product!.current_owner_id) : NONE)
+    setTempOwnerName(product!.temp_owner_name ?? '')
+    setTempOwnerPhone(product!.temp_owner_phone ?? '')
     setRenterId(product!.current_renter_id ? String(product!.current_renter_id) : NONE)
     setEditing(true)
   }
@@ -76,7 +83,9 @@ export function ProductDetailPanel({
       .update({
         current_station: station || null,
         current_key_holder: keyHolder || null,
-        current_owner_id: ownerId === NONE ? null : Number(ownerId),
+        current_owner_id: ownerMode === 'saved' && ownerId !== NONE ? Number(ownerId) : null,
+        temp_owner_name: ownerMode === 'temporary' ? tempOwnerName || null : null,
+        temp_owner_phone: ownerMode === 'temporary' ? tempOwnerPhone || null : null,
         current_renter_id: product!.status === 'at_rent' ? (renterId === NONE ? null : Number(renterId)) : product!.current_renter_id,
       })
       .eq('id', product!.id)
@@ -134,19 +143,33 @@ export function ProductDetailPanel({
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>Owner</Label>
-                <Select value={ownerId} onValueChange={setOwnerId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select owner" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>None</SelectItem>
-                    {owners.map((o) => (
-                      <SelectItem key={o.id} value={String(o.id)}>
-                        {o.name} · {o.phone}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Tabs value={ownerMode} onValueChange={(v) => setOwnerMode(v as 'saved' | 'temporary')}>
+                  <TabsList>
+                    <TabsTrigger value="saved">Saved contact</TabsTrigger>
+                    <TabsTrigger value="temporary">Temporary</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="saved">
+                    <Select value={ownerId} onValueChange={setOwnerId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select owner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE}>None</SelectItem>
+                        {owners.map((o) => (
+                          <SelectItem key={o.id} value={String(o.id)}>
+                            {o.name} · {o.phone}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TabsContent>
+                  <TabsContent value="temporary">
+                    <div className="flex gap-2">
+                      <Input placeholder="Name" value={tempOwnerName} onChange={(e) => setTempOwnerName(e.target.value)} />
+                      <Input placeholder="Phone" value={tempOwnerPhone} onChange={(e) => setTempOwnerPhone(e.target.value)} />
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
               {product.status === 'at_rent' && (
                 <div className="flex flex-col gap-1.5">
@@ -191,6 +214,16 @@ export function ProductDetailPanel({
                   <a href={`tel:${owner.phone}`} className="text-primary underline-offset-4 hover:underline">
                     {owner.name} · {owner.phone}
                   </a>
+                ) : product.temp_owner_name ? (
+                  <div>
+                    <a href={`tel:${product.temp_owner_phone}`} className="text-primary underline-offset-4 hover:underline">
+                      {product.temp_owner_name}
+                      {product.temp_owner_phone ? ` · ${product.temp_owner_phone}` : ''}
+                    </a>
+                    <Badge variant="outline" className="ml-1.5">
+                      temporary
+                    </Badge>
+                  </div>
                 ) : (
                   <p>—</p>
                 )}

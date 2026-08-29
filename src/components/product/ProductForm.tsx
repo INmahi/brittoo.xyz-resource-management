@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useOwners } from '@/hooks/useContacts'
 import type { ProductType } from '@/hooks/useProductTypes'
 import { supabase } from '@/lib/supabaseClient'
@@ -29,8 +30,11 @@ export function ProductForm({ productTypes, onCreated }: { productTypes: Product
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [station, setStation] = useState('')
+  const [ownerMode, setOwnerMode] = useState<'saved' | 'temporary'>('saved')
   const [ownerId, setOwnerId] = useState('')
   const [addingOwner, setAddingOwner] = useState(false)
+  const [tempOwnerName, setTempOwnerName] = useState('')
+  const [tempOwnerPhone, setTempOwnerPhone] = useState('')
   const [attributeValues, setAttributeValues] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -43,7 +47,10 @@ export function ProductForm({ productTypes, onCreated }: { productTypes: Product
     setName('')
     setCode('')
     setStation('')
+    setOwnerMode('saved')
     setOwnerId('')
+    setTempOwnerName('')
+    setTempOwnerPhone('')
     setAttributeValues({})
     setError(null)
     setAddingOwner(false)
@@ -65,7 +72,9 @@ export function ProductForm({ productTypes, onCreated }: { productTypes: Product
         name,
         code: code || null,
         current_station: station || null,
-        current_owner_id: ownerId ? Number(ownerId) : null,
+        current_owner_id: ownerMode === 'saved' && ownerId ? Number(ownerId) : null,
+        temp_owner_name: ownerMode === 'temporary' ? tempOwnerName || null : null,
+        temp_owner_phone: ownerMode === 'temporary' ? tempOwnerPhone || null : null,
         attributes: attributeValues,
       })
       .select('id')
@@ -173,35 +182,50 @@ export function ProductForm({ productTypes, onCreated }: { productTypes: Product
 
           <div className="flex flex-col gap-1.5">
             <Label>Owner</Label>
-            {addingOwner ? (
-              <ContactQuickAdd
-                kind="owner"
-                onCreated={(owner) => {
-                  refreshOwners()
-                  setOwnerId(String(owner.id))
-                  setAddingOwner(false)
-                }}
-                onCancel={() => setAddingOwner(false)}
-              />
-            ) : (
-              <div className="flex gap-2">
-                <Select value={ownerId} onValueChange={setOwnerId}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select owner" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {owners.map((o) => (
-                      <SelectItem key={o.id} value={String(o.id)}>
-                        {o.name} · {o.phone}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button type="button" variant="outline" onClick={() => setAddingOwner(true)}>
-                  New
-                </Button>
-              </div>
-            )}
+            <Tabs value={ownerMode} onValueChange={(v) => setOwnerMode(v as 'saved' | 'temporary')}>
+              <TabsList>
+                <TabsTrigger value="saved">Saved contact</TabsTrigger>
+                <TabsTrigger value="temporary">Temporary</TabsTrigger>
+              </TabsList>
+              <TabsContent value="saved">
+                {addingOwner ? (
+                  <ContactQuickAdd
+                    kind="owner"
+                    onCreated={(owner) => {
+                      refreshOwners()
+                      setOwnerId(String(owner.id))
+                      setAddingOwner(false)
+                    }}
+                    onCancel={() => setAddingOwner(false)}
+                  />
+                ) : (
+                  <div className="flex gap-2">
+                    <Select value={ownerId} onValueChange={setOwnerId}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Select owner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {owners.map((o) => (
+                          <SelectItem key={o.id} value={String(o.id)}>
+                            {o.name} · {o.phone}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="outline" onClick={() => setAddingOwner(true)}>
+                      New
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="temporary">
+                <div className="flex gap-2">
+                  <Input placeholder="Name" value={tempOwnerName} onChange={(e) => setTempOwnerName(e.target.value)} />
+                  <Input placeholder="Phone" value={tempOwnerPhone} onChange={(e) => setTempOwnerPhone(e.target.value)} />
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">Not saved as a contact — just attached to this product.</p>
+              </TabsContent>
+            </Tabs>
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}

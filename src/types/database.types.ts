@@ -137,6 +137,8 @@ export type Database = {
           remarks: string | null
           status: string
           status_version: number
+          temp_owner_name: string | null
+          temp_owner_phone: string | null
           updated_at: string
         }
         Insert: {
@@ -155,6 +157,8 @@ export type Database = {
           remarks?: string | null
           status?: string
           status_version?: number
+          temp_owner_name?: string | null
+          temp_owner_phone?: string | null
           updated_at?: string
         }
         Update: {
@@ -173,6 +177,8 @@ export type Database = {
           remarks?: string | null
           status?: string
           status_version?: number
+          temp_owner_name?: string | null
+          temp_owner_phone?: string | null
           updated_at?: string
         }
         Relationships: [
