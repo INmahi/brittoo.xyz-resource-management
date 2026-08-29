@@ -24,6 +24,11 @@ Extra steps needed beyond a normal Vite app (all in `vite.config.ts`'s `VitePWA(
 - List any non-hashed static files (e.g. `fav.png`, `brittoo-logo.png`) in `includeAssets` and in the `workbox.globPatterns` file-type list, or Workbox won't know to precache them.
 - Served over HTTPS (or localhost) — service workers refuse to register on plain HTTP, which Netlify's default domain satisfies automatically.
 
+## Dashboard UI
+
+- Products render as a spreadsheet-style table (`ProductTable.tsx`) rather than cards: Name / Available (tick·cross·pause icons) / editable Remarks / delete. The pause icon reuses the existing `maintenance` status value to mean "temporarily unavailable" — no schema change needed for that.
+- Data hooks (`useProducts`, `useProductTypes`, `useContacts`) guard against an out-of-order-refresh race: Realtime can fire `refresh()` faster than each request resolves, and without a request-id check, an older response landing after a newer one would flash stale data back onto the screen.
+
 ## Data & auth (Phase 1, done — online only)
 
 - **@supabase/supabase-js** — Postgres access, Auth, and Realtime client (`src/lib/supabaseClient.ts`, typed against `src/types/database.types.ts`).
